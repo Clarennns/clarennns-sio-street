@@ -6,7 +6,7 @@
 
 ## 📝 Description
 
-**Clarennns SIO Street** est une application web de restauration rapide développée dans le cadre de ma formation en **BTS SIO (Services Informatiques aux Organisations)**, option **SLAM**.
+**SIO Street** est une application web de restauration rapide développée dans le cadre de ma formation en **BTS SIO (Services Informatiques aux Organisations)**, option **SLAM**.
 
 L'objectif principal de ce projet est de mettre en place une architecture logicielle robuste de type **MVC** (Modèle-Vue-Contrôleur) afin de séparer la logique métier, les données et l'interface utilisateur. Le site permet notamment aux administrateurs de gérer dynamiquement la carte du restaurant.
 
