@@ -1,69 +1,155 @@
-# Dossier E6 - MCD
+﻿# Dossier E6 - Use Case et MCD
 
-## Contexte
-Application web MVC de gestion de restaurants, menus et plats, avec authentification utilisateur.
+## 1) Diagramme de cas d'utilisation (Use Case)
 
-## Exigences E6 couvertes
-- Base relationnelle avec jeu d'essai realiste
-- Association 1,1 vers 1,N : Restaurant -> Menu
-- Association 1,N vers 1,N porteuse de donnees : Menu <-> Plat via Choix_du_plat_dans_le_menu (Quantite)
-- CRUD : Restaurant, Menu, Plat
-- Inscription avec complexite du mot de passe
-- Connexion avec mot de passe chiffre (hash)
+Objectif : representer les acteurs, les cas metier, et les relations <<include>> / <<extend>> comme sur ton exemple.
 
-## MCD (Merise)
+Acteurs retenus :
+
+- Visiteur
+- Client (heritage de Visiteur)
+- Restaurateur (heritage de Visiteur)
+
+```plantuml
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor Visiteur
+actor Client
+actor Restaurateur
+
+Client --|> Visiteur
+Restaurateur --|> Visiteur
+
+rectangle "Systeme Site Restaurant MVC" {
+	usecase "Consulter restaurants" as UC_SeeRestaurants
+	usecase "Consulter menus d'un restaurant" as UC_SeeMenusByRestaurant
+	usecase "Consulter details menu" as UC_SeeMenuDetails
+	usecase "Consulter plats d'un menu" as UC_SeePlatsByMenu
+
+	usecase "S'inscrire" as UC_Register
+	usecase "Valider complexite\nmot de passe" as UC_PwdPolicy
+	usecase "Se connecter" as UC_Login
+	usecase "Verifier mot de passe\nhashe" as UC_PwdHashCheck
+
+	usecase "Gerer panier" as UC_Cart
+	usecase "Ajouter article panier" as UC_CartAdd
+	usecase "Modifier quantite" as UC_CartUpdate
+	usecase "Supprimer article" as UC_CartRemove
+
+	usecase "Gerer restaurants (CRUD)" as UC_CRUD_Restaurant
+	usecase "Gerer menus (CRUD)" as UC_CRUD_Menu
+	usecase "Gerer plats (CRUD)" as UC_CRUD_Plat
+	usecase "Associer plat a menu" as UC_LinkPlatMenu
+	usecase "Definir quantite du plat\ndans le menu" as UC_SetQty
+}
+
+Visiteur --> UC_SeeRestaurants
+Visiteur --> UC_SeeMenusByRestaurant
+Visiteur --> UC_SeeMenuDetails
+Visiteur --> UC_Register
+Visiteur --> UC_Login
+
+Client --> UC_Cart
+
+Restaurateur --> UC_CRUD_Restaurant
+Restaurateur --> UC_CRUD_Menu
+Restaurateur --> UC_CRUD_Plat
+Restaurateur --> UC_LinkPlatMenu
+
+UC_SeeMenusByRestaurant ..> UC_SeeRestaurants : <<include>>
+UC_SeeMenuDetails ..> UC_SeePlatsByMenu : <<include>>
+UC_Register ..> UC_PwdPolicy : <<include>>
+UC_Login ..> UC_PwdHashCheck : <<include>>
+
+UC_CartAdd ..> UC_Cart : <<extend>>
+UC_CartUpdate ..> UC_Cart : <<extend>>
+UC_CartRemove ..> UC_Cart : <<extend>>
+
+UC_SetQty ..> UC_LinkPlatMenu : <<extend>>
+
+note right of UC_Cart
+	extension points
+	- ajout_article
+	- mise_a_jour_quantite
+	- suppression_article
+end note
+
+note right of UC_LinkPlatMenu
+	extension point
+	- quantite_personnalisee
+end note
+
+@enduml
+```
+
+## 2) MCD (Merise)
+
+Objectif : representer les entites, associations et cardinalites conformes aux exigences E6.
+
+### Entites
+
+- UTILISATEUR(id, nom, prenom, email, password, role)
+- RESTAURANT(IDRestaurant, NomRestaurant, VilleRestaurant, AdresseRestaurant, CodePostaleRestaurant)
+- MENU(IDMenu, NomMenu, PrixMenu)
+- PLAT(IDPlat, NomPlat, PrixPlat)
+
+### Associations et cardinalites
+
+- POSSEDE entre RESTAURANT et MENU
+  - RESTAURANT (1,1)
+  - MENU (0,N)
+- COMPOSER entre MENU et PLAT, porteuse de donnee Quantite
+  - MENU (1,N)
+  - PLAT (0,N)
+  - attribut d'association : Quantite
 
 ```mermaid
 erDiagram
-	USERS {
-		INT id PK
-		VARCHAR nom
-		VARCHAR prenom
-		VARCHAR email "UNIQUE"
-		VARCHAR password "hash"
-		ENUM role "client|restaurateur|vendeur"
-	}
+		UTILISATEUR {
+				INT id PK
+				VARCHAR nom
+				VARCHAR prenom
+				VARCHAR email
+				VARCHAR password
+				VARCHAR role
+		}
 
-	RESTAURANT {
-		INT IDRestaurant PK
-		VARCHAR NomRestaurant
-		VARCHAR VilleRestaurant
-		VARCHAR AdresseRestaurant
-		VARCHAR CodePostaleRestaurant
-	}
+		RESTAURANT {
+				INT IDRestaurant PK
+				VARCHAR NomRestaurant
+				VARCHAR VilleRestaurant
+				VARCHAR AdresseRestaurant
+				VARCHAR CodePostaleRestaurant
+		}
 
-	MENU {
-		INT IDMenu PK
-		VARCHAR NomMenu
-		DECIMAL PrixMenu
-		INT IDRestaurant FK
-	}
+		MENU {
+				INT IDMenu PK
+				VARCHAR NomMenu
+				DECIMAL PrixMenu
+		}
 
-	PLAT {
-		INT IDPlat PK
-		VARCHAR NomPlat
-		DECIMAL PrixPlat
-	}
+		PLAT {
+				INT IDPlat PK
+				VARCHAR NomPlat
+				DECIMAL PrixPlat
+		}
 
-	CHOIX_DU_PLAT_DANS_LE_MENU {
-		INT IDMenu PK,FK
-		INT IDPlat PK,FK
-		INT Quantite
-	}
+		CHOIX_DU_PLAT_DANS_LE_MENU {
+				INT IDMenu PK,FK
+				INT IDPlat PK,FK
+				INT Quantite
+		}
 
-	RESTAURANT ||--o{ MENU : propose
-	MENU ||--o{ CHOIX_DU_PLAT_DANS_LE_MENU : compose
-	PLAT ||--o{ CHOIX_DU_PLAT_DANS_LE_MENU : entre_dans
+		RESTAURANT ||--o{ MENU : POSSEDE
+		MENU ||--|{ CHOIX_DU_PLAT_DANS_LE_MENU : COMPOSER
+		PLAT ||--o{ CHOIX_DU_PLAT_DANS_LE_MENU : ETRE_CHOISI
 ```
 
-Cardinalites Merise :
-- RESTAURANT (1,1) - possede - MENU (0,N)
-- MENU (1,N) - contient - PLAT (0,N) via CHOIX_DU_PLAT_DANS_LE_MENU [Quantite]
+### Lecture rapide du MCD
 
-## Traceabilite rapide vers le projet
-- Schema SQL : database/schema_e6.sql
-- Inscription/connexion : controllers/UserController.php et models/User.php
-- CRUD Restaurant : controllers/RestaurantController.php
-- CRUD Menu : controllers/MenuController.php
-- CRUD Plat : controllers/PlatController.php
-- Illustration 1,N vers 1,N : models/Plat.php (getByMenuId)
+- Un restaurant propose zero a plusieurs menus, et chaque menu est rattache a un restaurant.
+- Un menu contient un ou plusieurs plats.
+- Un plat peut apparaitre dans zero a plusieurs menus.
+- La quantite est portee par l'association entre menu et plat.
