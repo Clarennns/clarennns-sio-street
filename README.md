@@ -42,12 +42,12 @@ L'objectif principal de ce projet est de mettre en place une architecture logici
 2.  **Importer la base de données :**
     * Ouvrez PHPMyAdmin.
     * Créez une base de données nommée `restaurant_db`.
-    * Importez le fichier `.sql` fourni dans le dossier de base de données.
+    * Importez le fichier `base_de_données.sql` fourni dans le dossier de base de données.
 3.  **Configuration :**
-    * Modifiez le fichier de configuration dans `config/` pour y insérer vos identifiants de base de données (host, dbname, user, password).
+    * Modifiez le fichier de configuration dans `config/` pour y insérer vos identifiants de base de données (host, dbname, user, password). (optionnel)
 4.  **Lancer le projet :**
     * Placez le dossier dans votre répertoire `www/` ou `htdocs/`.
-    * Accédez au site via `http://localhost/clarennns-sio-street`.
+    * Accédez au site via 'http://localhost/site_restaurant_mvc_v2_correct/index.php`.
 
 ## 📂 Structure du projet
 
