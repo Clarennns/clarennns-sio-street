@@ -226,9 +226,36 @@ class Plat {
 
     public static function delete($id) {
         $db = Database::connect();
-        $stmt = $db->prepare("DELETE FROM Plat WHERE IDPlat = :id");
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        return $stmt->execute();
+        $id = (int)$id;
+
+        try {
+            $db->beginTransaction();
+
+            $stmt = $db->prepare("DELETE FROM Choix_du_plat_dans_le_menu WHERE IDPlat = :id");
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $stmt = $db->prepare("DELETE FROM Commande_du_plat WHERE IDPlat = :id");
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            // Table utilisee par le module de commandes recentes.
+            $stmt = $db->prepare("DELETE FROM commandes WHERE plat_id = :id");
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $stmt = $db->prepare("DELETE FROM Plat WHERE IDPlat = :id");
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $deleted = $stmt->execute();
+
+            $db->commit();
+            return $deleted;
+        } catch (PDOException $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw $e;
+        }
     }
 
     // Méthode pour récupérer les plats d'un menu

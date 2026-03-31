@@ -76,7 +76,11 @@ class Restaurant {
 
     public static function create($nom, $ville, $adresse, $codePostal) {
         $db = database::getConnection();
-        $stmt = $db->prepare("INSERT INTO Restaurant (NomRestaurant, VilleRestaurant, AdresseRestaurant, CodePostaleRestaurant) VALUES (:nom, :ville, :adresse, :codePostal)");
+        $nextIdStmt = $db->query("SELECT COALESCE(MAX(IDRestaurant), 0) + 1 AS NextId FROM Restaurant");
+        $nextId = (int)$nextIdStmt->fetch(PDO::FETCH_ASSOC)['NextId'];
+
+        $stmt = $db->prepare("INSERT INTO Restaurant (IDRestaurant, NomRestaurant, VilleRestaurant, AdresseRestaurant, CodePostaleRestaurant) VALUES (:id, :nom, :ville, :adresse, :codePostal)");
+        $stmt->bindParam(':id', $nextId, PDO::PARAM_INT);
         $stmt->bindParam(':nom', $nom);
         $stmt->bindParam(':ville', $ville);
         $stmt->bindParam(':adresse', $adresse);
@@ -97,9 +101,48 @@ class Restaurant {
 
     public static function delete($id) {
         $db = database::getConnection();
-        $stmt = $db->prepare("DELETE FROM Restaurant WHERE IDRestaurant = :id");
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        return $stmt->execute();
+        $id = (int)$id;
+
+        try {
+            $db->beginTransaction();
+
+            // Supprimer les receptions associees aux restaurateurs du restaurant.
+            $stmt = $db->prepare("DELETE rc FROM `Réception_de_commande` rc INNER JOIN Restaurateur r ON rc.Id = r.Id WHERE r.IDRestaurant = :id");
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            // Supprimer les restaurateurs rattaches au restaurant.
+            $stmt = $db->prepare("DELETE FROM Restaurateur WHERE IDRestaurant = :id");
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            // Supprimer les liaisons des menus rattaches au restaurant.
+            $stmt = $db->prepare("DELETE cdm FROM Commande_du_Menu cdm INNER JOIN Menu m ON cdm.IDMenu = m.IDMenu WHERE m.IDRestaurant = :id");
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $stmt = $db->prepare("DELETE cpm FROM Choix_du_plat_dans_le_menu cpm INNER JOIN Menu m ON cpm.IDMenu = m.IDMenu WHERE m.IDRestaurant = :id");
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            // Supprimer les menus du restaurant.
+            $stmt = $db->prepare("DELETE FROM Menu WHERE IDRestaurant = :id");
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            // Supprimer finalement le restaurant.
+            $stmt = $db->prepare("DELETE FROM Restaurant WHERE IDRestaurant = :id");
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $deleted = $stmt->execute();
+
+            $db->commit();
+            return $deleted;
+        } catch (PDOException $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw $e;
+        }
     }
 }
 ?>

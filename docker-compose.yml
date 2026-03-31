@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # Service MySQL
+  db:
+    image: mysql:8.0
+    container_name: restaurant_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: restaurant_db
+      MYSQL_USER: restaurant_user
+      MYSQL_PASSWORD: restaurant_pass
+      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./config/base_de_données.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./database/schema_e6.sql:/docker-entrypoint-initdb.d/02-schema.sql
+    networks:
+      - restaurant_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Service PHP + Apache
+  web:
+    build: .
+    container_name: restaurant_web
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_NAME: restaurant_db
+      DB_USER: restaurant_user
+      DB_PASSWORD: restaurant_pass
+    ports:
+      - "80:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/apache.conf:/etc/apache2/sites-available/000-default.conf
+    networks:
+      - restaurant_network
+    links:
+      - db
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  restaurant_network:
+    driver: bridge

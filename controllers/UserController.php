@@ -21,12 +21,17 @@ class UserController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nom = $_POST['nom'] ?? '';
             $prenom = $_POST['prenom'] ?? '';
+            $dateNaissance = $_POST['date_naissance'] ?? '';
+            $adresse = $_POST['adresse'] ?? '';
+            $ville = $_POST['ville'] ?? '';
+            $codePostal = $_POST['code_postal'] ?? '';
+            $telephone = $_POST['telephone'] ?? '';
             $email = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
             $role = $_POST['role'] ?? 'client'; // rôle par défaut
             $passwordRegex = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/';
 
-            if (!empty($nom) && !empty($prenom) && !empty($email) && !empty($password) && !empty($role)) {
+            if (!empty($nom) && !empty($prenom) && !empty($dateNaissance) && !empty($adresse) && !empty($ville) && !empty($codePostal) && !empty($telephone) && !empty($email) && !empty($password) && !empty($role)) {
                 if (!preg_match($passwordRegex, $password)) {
                     echo "Mot de passe invalide : minimum 8 caractères, 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial.";
                     require_once 'views/user/Register.php';
@@ -35,7 +40,7 @@ class UserController {
 
                 $existingUser = User::getByEmail($email);
                 if (!$existingUser) {
-                    $user = new User(null, $nom, $prenom, $email, $password, $role);
+                    $user = new User(null, $nom, $prenom, $email, $password, $role, false, $dateNaissance, $adresse, $ville, $codePostal, $telephone);
                     if ($user->save()) {
                         header('Location: index.php?controller=user&action=login');
                         exit();
