@@ -41,7 +41,7 @@ L'objectif principal de ce projet est de mettre en place une architecture logici
     ```
 2.  **Importer la base de données :**
     * Ouvrez PHPMyAdmin.
-    * Créez une base de données nommée `sio_street`.
+    * Créez une base de données nommée `restaurant_db`.
     * Importez le fichier `.sql` fourni dans le dossier de base de données.
 3.  **Configuration :**
     * Modifiez le fichier de configuration dans `config/` pour y insérer vos identifiants de base de données (host, dbname, user, password).
